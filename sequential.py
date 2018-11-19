@@ -4,6 +4,7 @@ from random import randrange
 from random import random
 from csv import reader
 from math import exp
+import time
 
 # Load a CSV file
 def load_csv(filename):
@@ -177,23 +178,31 @@ def back_propagation(train, test, l_rate, n_epoch, n_hidden):
 		predictions.append(prediction)
 	return(predictions)
 
-# Test Backprop on Seeds dataset
-seed(1)
-# load and prepare data
-filename = 'seeds_dataset.csv'
-dataset = load_csv(filename)
-for i in range(len(dataset[0])-1):
-	str_column_to_float(dataset, i)
-# convert class column to integers
-str_column_to_int(dataset, len(dataset[0])-1)
-# normalize input variables
-minmax = dataset_minmax(dataset)
-normalize_dataset(dataset, minmax)
-# evaluate algorithm
-n_folds = 5
-l_rate = 0.3
-n_epoch = 500
-n_hidden = 5
-scores = evaluate_algorithm(dataset, back_propagation, n_folds, l_rate, n_epoch, n_hidden)
-print('Scores: %s' % scores)
-print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
+if __name__=='__main__':
+	start_time = time.time()
+	# Test Backprop on Seeds dataset
+	seed(1)
+	# load and prepare data
+	filename = 'seeds_dataset.csv'
+	dataset = load_csv(filename)
+	load_time = time.time()
+	print("---Load Time: %s seconds ---" % (load_time - start_time))
+
+	for i in range(len(dataset[0])-1):
+		str_column_to_float(dataset, i)
+	# convert class column to integers
+	str_column_to_int(dataset, len(dataset[0])-1)
+	# normalize input variables
+	minmax = dataset_minmax(dataset)
+	normalize_dataset(dataset, minmax)
+	# evaluate algorithm
+	n_folds = 5
+	l_rate = 0.3
+	n_epoch = 500
+	n_hidden = 5
+	scores = evaluate_algorithm(dataset, back_propagation, n_folds, l_rate, n_epoch, n_hidden)
+	print('Scores: %s' % scores)
+	print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
+	end_time = time.time()
+	print("---ML Time: %s seconds ---" % (end_time - load_time))
+	print("---total Time: %s seconds ---" % (end_time - start_time))
