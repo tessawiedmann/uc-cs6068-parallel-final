@@ -1,13 +1,13 @@
 from matplotlib.ticker import FormatStrFormatter
 from random import randint
-from xlwt import Workbook
+#from xlwt import Workbook
 import matplotlib.gridspec as gridspec
 import random as rand
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
 import math as math
-import xlrd
+#import xlrd
 
 
 def sigmoid(z):
@@ -144,7 +144,7 @@ for neuron in range(0, 150):
 
 plt.subplots_adjust(wspace=0, hspace=0)
 plt.show()
-
+"""
 wb = Workbook()
 sheet1 = wb.add_sheet('ERRORS')
 sheet1.write(0, 0, 'Training Loss')
@@ -176,3 +176,4 @@ for row in range(0, len(testIndx)):
     sheet4.write(row, 1, testIndx[row])
 
 wb.save('HW3P2.xls')
+"""
