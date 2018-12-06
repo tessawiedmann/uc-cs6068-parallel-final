@@ -40,13 +40,13 @@ start_time = time.time()
 ########## READ DATA FILES ##########
 pictures = np.empty([5000, 784])
 idx = 0
-with open('MNISTnumImages5000.txt', 'r') as f:  # read each row and save it in pictures
+with open('C:\\Users\\wiedm\\OneDrive\\Documents\\18fs\\parallel\\final\\uc-cs6068-parallel-final\\MNISTnumImages5000.txt', 'r') as f:  # read each row and save it in pictures
     reader = csv.reader(f, delimiter='\t')
     for row in reader:
         pictures[idx] = row
         idx += 1
 
-label_file = open("MNISTnumLabels5000.txt", "r")  # Label file
+label_file = open('C:\\Users\\wiedm\\OneDrive\\Documents\\18fs\\parallel\\final\\uc-cs6068-parallel-final\\MNISTnumLabels5000.txt', "r")  # Label file
 labels = label_file.read().split('\n')  # Split file by new line to extract labels
 ########## READ DATA FILES ##########
 
