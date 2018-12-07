@@ -32,6 +32,17 @@ def sigmoid(z):
 def sigmoidPrime(z):
     return (1 - sigmoid(z)) * (sigmoid(z))
 
+def dotproduct(x, y):
+	final = []
+	for weightColumn in y.T:
+		temp = 0
+		counter = 0
+		for output in x:
+			temp += output*weightColumn[counter]
+			counter += 1
+		final.append(temp)
+	return np.array(final).T
+
 
 ################################################################################################
 
@@ -88,8 +99,8 @@ while trainHR < 0.97:
         s[0] = np.copy(pictures[trainIndx[i]])  # input into the first layer is the picture
         inout = np.copy(s[0])
         for layer in range(0, len(layerSizes) - 1):
-            s[layer + 1] = np.dot(inout, W[
-                layer])  # input into the hidden layer is the dot product of the output of the previous layer and the weights
+            #s[layer + 1] = np.dot(inout, W[layer])  # input into the hidden layer is the dot product of the output of the previous layer and the weights
+            s[layer + 1] = dotproduct(inout, W[layer])
             inout = sigmoid(s[layer + 1])  # output of the hidden layer is the sigmoid of the inputs
 
         # COUNT ERRORS
@@ -103,9 +114,8 @@ while trainHR < 0.97:
         delt[len(layerSizes) - 2] = sigmoidPrime(s[len(s) - 1]) * (
                     y[int(labels[trainIndx[i]])] - inout)  # delt(1:output layer) = f(s(2:output layer)) * (y-yhat)
         for layer in range(len(layerSizes) - 2, 0, -1):  # layer = 1
-            delt[layer - 1] = sigmoidPrime(s[layer]) * np.dot(delt[layer], W[
-                layer].T)  # delt(0:hidden layer) = f'(s(1:hidden layer)) * dot(delt(1:output layer), W(output to hidden))
-
+            #delt[layer - 1] = sigmoidPrime(s[layer]) * np.dot(delt[layer], W[layer].T)  # delt(0:hidden layer) = f'(s(1:hidden layer)) * dot(delt(1:output layer), W(output to hidden))
+            delt[layer - 1] = sigmoidPrime(s[layer]) * dotproduct(delt[layer], W[layer].T)
         # CALCULATE CHANGE OF WEIGHTS
         deltaW[0] = LR * np.outer(s[0], delt[0]) + alpha * deltaW[
             0]  # deltaW(0:input to hidden) = n * outer(s(0:picture input), delt(0:hidden layer)) + momentum
@@ -128,8 +138,8 @@ for i in range(0, len(trainIndx)):
     s[0] = pictures[trainIndx[i]]  # input into the first layer is the picture
     inout = s[0]
     for layer in range(0, len(layerSizes) - 1):
-        s[layer + 1] = np.dot(inout, W[
-            layer])  # input into the hidden layer is the dot product of the output of the previous layer and the weights
+        #s[layer + 1] = np.dot(inout, W[layer])  # input into the hidden layer is the dot product of the output of the previous layer and the weights
+        s[layer + 1] = dotproduct(inout, W[layer])
         inout = sigmoid(s[layer + 1])  # output of the hidden layer is the sigmoid of the inputs
 
     # INCREMENT CONFUSION MATRIX
@@ -146,8 +156,8 @@ for i in range(0, len(testIndx)):
     s[0] = pictures[testIndx[i]]  # input into the first layer is the picture
     inout = s[0]
     for layer in range(0, len(layerSizes) - 1):
-        s[layer + 1] = np.dot(inout, W[
-            layer])  # input into the hidden layer is the dot product of the output of the previous layer and the weights
+        #s[layer + 1] = np.dot(inout, W[layer])  # input into the hidden layer is the dot product of the output of the previous layer and the weights
+        s[layer + 1] = dotproduct(inout, W[layer])
         inout = sigmoid(s[layer + 1])  # output of the hidden layer is the sigmoid of the inputs
 
     # COUNT ERRORS
