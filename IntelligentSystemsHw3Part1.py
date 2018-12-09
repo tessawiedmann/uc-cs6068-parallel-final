@@ -71,12 +71,12 @@ class ComputationalThreads(threading.Thread):
     def dotproduct(self):
         #for weightColumn in y.T:
         #    print(y.T.shape())
-        weightColumn = self.matrixB.T[self.colNum]
+        weightColumn = self.matrixB[self.colNum]
         tempDotProductHolder = 0
         counter = 0
-        print("weightColumn Size" + str(weightColumn.shape))
-        print("\t ouptut shape" + str(self.matrixA.shape))
-
+        #print("weightColumn Size" + str(weightColumn.shape))
+        #print("\t ouptut shape" + str(self.matrixA.shape))
+        #tempMatrixA = self.matrixA.T if self.matrixA.shape[0] == 1 else self.matrixA
         for output in self.matrixA:
             tempDotProductHolder += output*weightColumn[counter]
             counter += 1
@@ -84,43 +84,45 @@ class ComputationalThreads(threading.Thread):
         #    print("temp type" + str(type(tempDotProductHolder)))
         #    print("temp Valie" + str(tempDotProductHolder))
         #    print(type(self.resultMatrix))
-        #    print(self.resultMatrix.shape)
-        self.resultMatrix[0][self.colNum] = tempDotProductHolder
+        #print(self.resultMatrix.shape)
+        #print(self.resultMatrix)
+        self.resultMatrix[self.colNum] = tempDotProductHolder
         #else:
         #    print("In else in dot")
         #    self.resultMatrix[self.colNum] = tempDotProductHolder
 
 class ComputationalThreadManager():
-    def __init__(self,matrixA,matrixB,resultMatrix):
+    def __init__(self,matrixA,matrixB):
         self.matrixA = matrixA
         self.matrixB = matrixB
-        self.resultMatrix = resultMatrix
-        print("Manager init X shape:" + str(matrixA.shape))
-        print("Manager init y shape:" + str(matrixB.shape))
-        print("Manager init resultMat shape:" + str(resultMatrix.shape))
+        #print("Manager init X shape:" + str(matrixA.shape))
+        #print("Manager init y shape:" + str(matrixB.shape))
 
     def parallize(self):
-        print("startedCll")
+        #print("startedCll")
         threadList = []
         maxNumthreads= self.matrixB.shape[1]
+        tempResult = [0]*maxNumthreads
         for i in range(maxNumthreads):
-            threadList.append(ComputationalThreads(str(i),self.matrixA, self.matrixB,self.resultMatrix, i))
+            threadList.append(ComputationalThreads(str(i),self.matrixA, self.matrixB.T,tempResult, i))
         for i in range(maxNumthreads):
             threadList[i].start()
         for i in range(maxNumthreads):
             threadList[i].join()
-        print("Finished the call\n\n")
+        #print("Finished the call\n\n")
+        return np.array(tempResult).T
 ################################################################################################
 def dotproduct(x, y):
-	final = []
-	for weightColumn in y.T:
-		temp = 0
-		counter = 0
-		for output in x:
-			temp += output*weightColumn[counter]
-			counter += 1
-		final.append(temp)
-	return np.array(final).T
+    print("OLD DOT PRODUCT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    final = []
+    for weightColumn in y.T:
+        temp = 0
+        counter = 0
+        for output in x:
+            temp += output*weightColumn[counter]
+            counter += 1
+        final.append(temp)
+    return np.array(final).T
 
 ########## MAIN PROGRAM ##########
 master_start_time = time.time()
@@ -178,12 +180,19 @@ while trainHR < 0.97:
         inout = np.copy(s[0])
         for layer in range(0, len(layerSizes) - 1):
             #s[layer + 1] = dotproduct(inout, W[layer]) # input into the hidden layer is the dot product of the output of the previous layer and the weights
-            manager = ComputationalThreadManager(inout, W[layer], s[layer + 1])
-            manager.parallize()
+            #print("manager 3")
+            manager = ComputationalThreadManager(inout, W[layer] )
+            s[layer + 1] = manager.parallize()
             inout = sigmoid(s[layer + 1])  # output of the hidden layer is the sigmoid of the inputs
-
+            f = 5
         # COUNT ERRORS
         tempIO = np.copy(inout)
+
+        #print("INOUT " + str(inout.shape))
+        #print(inout)
+        #print("TempIO " + str(tempIO.shape))
+        #print(tempIO)
+        #print("INDEX " + str(int(labels[trainIndx[i]])))
         tempIO[int(labels[trainIndx[i]])] = 0.0  # create new array and set the correct output value to 0
 
         if inout[int(labels[trainIndx[i]])] <= 0.75 or max(
@@ -193,7 +202,10 @@ while trainHR < 0.97:
         delt[len(layerSizes) - 2] = sigmoidPrime(s[len(s) - 1]) * (
                     y[int(labels[trainIndx[i]])] - inout)  # delt(1:output layer) = f(s(2:output layer)) * (y-yhat)
         for layer in range(len(layerSizes) - 2, 0, -1):  # layer = 1
-            delt[layer - 1] = sigmoidPrime(s[layer]) * dotproduct(delt[layer], W[layer].T) # delt(0:hidden layer) = f'(s(1:hidden layer)) * dot(delt(1:output layer), W(output to hidden))
+            #print("manager 4")
+            manager = ComputationalThreadManager(delt[layer], W[layer].T)
+            tempDotResult= manager.parallize()
+            delt[layer - 1] = sigmoidPrime(s[layer]) * tempDotResult # delt(0:hidden layer) = f'(s(1:hidden layer)) * dot(delt(1:output layer), W(output to hidden))
         # CALCULATE CHANGE OF WEIGHTS
         deltaW[0] = LR * np.outer(s[0], delt[0]) + alpha * deltaW[
             0]  # deltaW(0:input to hidden) = n * outer(s(0:picture input), delt(0:hidden layer)) + momentum
@@ -220,8 +232,9 @@ for i in range(0, len(trainIndx)):
     inout = s[0]
     for layer in range(0, len(layerSizes) - 1):
         #s[layer + 1] = dotproduct(inout, W[layer]) # input into the hidden layer is the dot product of the output of the previous layer and the weights
-        manager = ComputationalThreadManager(inout,W[layer],s[layer+1])
-        manager.parallize()
+        #print("manager1")
+        manager = ComputationalThreadManager(inout,W[layer])
+        s[layer + 1] = manager.parallize()
         inout = sigmoid(s[layer + 1])  # output of the hidden layer is the sigmoid of the inputs
 
     # INCREMENT CONFUSION MATRIX
@@ -239,8 +252,9 @@ for i in range(0, len(testIndx)):
     inout = s[0]
     for layer in range(0, len(layerSizes) - 1):
         #s[layer + 1] = dotproduct(inout, W[layer]) # input into the hidden layer is the dot product of the output of the previous layer and the weights
-        manager = ComputationalThreadManager(inout, W[layer], s[layer + 1])
-        manager.parallize()
+        #print("manager 2")
+        manager = ComputationalThreadManager(inout, W[layer] )
+        s[layer + 1]=manager.parallize()
         inout = sigmoid(s[layer + 1])  # output of the hidden layer is the sigmoid of the inputs
 
     # COUNT ERRORS
